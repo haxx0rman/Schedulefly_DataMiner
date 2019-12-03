@@ -12,53 +12,26 @@ import json, datetime
 
 class Analyze():
     def __init__(self):
-        with open('data.json') as f:
-            self.data = json.load(f)
-
-        try:
-            with open('ppl_history.json') as f:
-                self.phistory = json.load(f)
-        except json.decoder.JSONDecodeError:
-            self.phistory = {}
-
-        try:
-            with open('roles.json') as f:
-                self.roles = json.load(f)
-        except json.decoder.JSONDecodeError:
-            self.roles = {}
-
-        try:
-            with open('people.json') as f:
-                self.ppl = json.load(f)
-        except json.decoder.JSONDecodeError:
-            self.ppl = {}
-
-        try:
-            with open('alias.json') as f:
-                self.alias = json.load(f)
-        except json.decoder.JSONDecodeError:
-            self.alias = {}
+        self.open_databases()
         self.days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
         self.start()
 
     def start(self):
-        self.personal_history()
+        self.role_stats("Runner")
+        #self.personal_history()
+        pass
 
-    def save_all(self):
-        # with open('data.json', 'w') as outfile:
-        #      json.dump(self.data, outfile, indent=4, sort_keys=True)
-
-        with open('ppl_history.json', 'w') as outfile:
-             json.dump(self.phistory, outfile, indent=4, sort_keys=True)
-
-        with open('roles.json', 'w') as outfile:
-             json.dump(self.roles, outfile, indent=4, sort_keys=True)
-
-        with open('people.json', 'w') as outfile:
-             json.dump(self.ppl, outfile, indent=4, sort_keys=True)
-
-        with open('alias.json', 'w') as outfile:
-             json.dump(self.alias, outfile, indent=4, sort_keys=True)
+    def role_stats(self, role):
+        print(len(self.data.keys()))
+        if role not in self.roles:
+            print("Role Doesnt Exist")
+            return
+        l = []
+        print("{} People have had at least 1 {} shift...".format(str(len(self.roles[role])), role))
+        for p in self.roles[role]:
+            #print(self.ppl[p][])
+            dank = "{} has worked {} {} shifts.".format(self.ppl[p]["Name"], self.ppl[p]["Roles"][role]["Shift Count"], role)
+            print(dank)
 
     def track_roles(self, p):
         if p["Role"] in self.roles.keys():
@@ -67,6 +40,7 @@ class Analyze():
         else:
             self.roles[p["Role"]] = [ p["uid"] ]
         pass
+
     def personal_history(self):
         for day in self.data.keys():
             for emp in self.data[day]["day"]:
@@ -123,50 +97,6 @@ class Analyze():
         frequency of in-time
         profile id,
         whatever contact info can be found on schedulefly,
-
-        example:
-        ex = {
-            "Name": name,
-            "uid": uid,
-            "Shift Count": 0,
-            "Roles": {
-                "Runner": {
-                    "First Shift": "1/1/1",
-                    "Shift Count": 0,
-                    "Days": {
-                        "mon": 0,
-                        "tues": 0,
-                        "wed": 0,
-                        "thur": 0,
-                        "fri": 0,
-                        "sat": 0,
-                        "sun": 0
-                    },
-                    "In Times": {
-
-                    }
-                }
-            }
-        }
-
-            name:
-                info
-                info
-                info
-                roles:
-                    runner:
-                    first runner shift: 9/11/2000
-                        days worked:
-                            saturday: 9
-                            sunday: 5
-                            monday: 6
-                            etc...
-                        in time:
-                            430: 8 times,
-                            600: 1000 times
-                            etc...
-                    server:
-                        etc...
         """
 
         # check if this user is saved yet
@@ -243,7 +173,49 @@ class Analyze():
             self.ppl[emp["uid"]] = user
 
         #self.save_all()
+    def open_databases(self):
+        with open('data.json') as f:
+            self.data = json.load(f)
 
+        try:
+            with open('ppl_history.json') as f:
+                self.phistory = json.load(f)
+        except json.decoder.JSONDecodeError:
+            self.phistory = {}
+
+        try:
+            with open('roles.json') as f:
+                self.roles = json.load(f)
+        except json.decoder.JSONDecodeError:
+            self.roles = {}
+
+        try:
+            with open('people.json') as f:
+                self.ppl = json.load(f)
+        except json.decoder.JSONDecodeError:
+            self.ppl = {}
+
+        try:
+            with open('alias.json') as f:
+                self.alias = json.load(f)
+        except json.decoder.JSONDecodeError:
+            self.alias = {}
+
+    def save_all(self):
+        # with open('data.json', 'w') as outfile:
+        #      json.dump(self.data, outfile, indent=4, sort_keys=True)
+
+        with open('ppl_history.json', 'w') as outfile:
+             json.dump(self.phistory, outfile, indent=4, sort_keys=True)
+
+        with open('roles.json', 'w') as outfile:
+             json.dump(self.roles, outfile, indent=4, sort_keys=True)
+
+        with open('people.json', 'w') as outfile:
+             json.dump(self.ppl, outfile, indent=4, sort_keys=True)
+
+        with open('alias.json', 'w') as outfile:
+             json.dump(self.alias, outfile, indent=4, sort_keys=True)
 
 
 Analyze()
