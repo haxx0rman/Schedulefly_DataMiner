@@ -15,14 +15,29 @@ class Analyze():
         with open('data.json') as f:
             self.data = json.load(f)
 
-        with open('ppl_history.json') as f:
-            self.phistory = json.load(f)
+        try:
+            with open('ppl_history.json') as f:
+                self.phistory = json.load(f)
+        except json.decoder.JSONDecodeError:
+            self.phistory = {}
 
-        with open('people.json') as f:
-            self.ppl = json.load(f)
+        try:
+            with open('roles.json') as f:
+                self.roles = json.load(f)
+        except json.decoder.JSONDecodeError:
+            self.roles = {}
 
-        with open('alias.json') as f:
-            self.alias = json.load(f)
+        try:
+            with open('people.json') as f:
+                self.ppl = json.load(f)
+        except json.decoder.JSONDecodeError:
+            self.ppl = {}
+
+        try:
+            with open('alias.json') as f:
+                self.alias = json.load(f)
+        except json.decoder.JSONDecodeError:
+            self.alias = {}
         self.days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
         self.start()
 
@@ -36,12 +51,22 @@ class Analyze():
         with open('ppl_history.json', 'w') as outfile:
              json.dump(self.phistory, outfile, indent=4, sort_keys=True)
 
+        with open('roles.json', 'w') as outfile:
+             json.dump(self.roles, outfile, indent=4, sort_keys=True)
+
         with open('people.json', 'w') as outfile:
              json.dump(self.ppl, outfile, indent=4, sort_keys=True)
 
         with open('alias.json', 'w') as outfile:
              json.dump(self.alias, outfile, indent=4, sort_keys=True)
 
+    def track_roles(self, p):
+        if p["Role"] in self.roles.keys():
+            if p["uid"] not in self.roles[p["Role"]]:
+                self.roles[p["Role"]].append(p["uid"])
+        else:
+            self.roles[p["Role"]] = [ p["uid"] ]
+        pass
     def personal_history(self):
         for day in self.data.keys():
             for emp in self.data[day]["day"]:
@@ -76,7 +101,8 @@ class Analyze():
                         "Role": emp["Role"],
                         "In Time": emp["In Time"]
                 }
-
+                self.track_stats(dict)
+                self.track_roles(dict)
                 if uid in self.phistory.keys():
                     self.phistory[uid].append(dict)
                 else:
@@ -85,9 +111,9 @@ class Analyze():
                 #print(self.phistory)
 
         self.save_all()
-        print(json.dumps(self.phistory, indent=4, sort_keys=True))
+        #print(json.dumps(self.phistory, indent=4, sort_keys=True))
 
-    def track_stats(self):
+    def track_stats(self, emp):
         """
         For every employee we want to track:
         what roles they have worked,
@@ -99,6 +125,29 @@ class Analyze():
         whatever contact info can be found on schedulefly,
 
         example:
+        ex = {
+            "Name": name,
+            "uid": uid,
+            "Shift Count": 0,
+            "Roles": {
+                "Runner": {
+                    "First Shift": "1/1/1",
+                    "Shift Count": 0,
+                    "Days": {
+                        "mon": 0,
+                        "tues": 0,
+                        "wed": 0,
+                        "thur": 0,
+                        "fri": 0,
+                        "sat": 0,
+                        "sun": 0
+                    },
+                    "In Times": {
+
+                    }
+                }
+            }
+        }
 
             name:
                 info
@@ -120,11 +169,81 @@ class Analyze():
                         etc...
         """
 
-        base = {
-            "Name": name,
-            "uid": uid,
-            "Roles": {
-                "Runner": "uughh"
+        # check if this user is saved yet
+        #print(self.ppl.keys())
+        if emp["uid"] in self.ppl.keys():
+            self.ppl[emp["uid"]]["Shift Count"] += 1
+
+            newd8 = emp["Date"].split("/")
+            newd8 = datetime.date(int(newd8[2]), int(newd8[0]), int(newd8[1]))
+            oldd8 = self.ppl[emp["uid"]]["First Shift"].split("/")
+            oldd8 = datetime.date(int(oldd8[2]), int(oldd8[0]), int(oldd8[1]))
+            if oldd8 > newd8:
+                self.ppl[emp["uid"]]["First Shift"] = emp["Date"]
+            # check if that role has been saved under this employee yet
+            if emp["Role"] in self.ppl[emp["uid"]]["Roles"]:
+                self.ppl[emp["uid"]]["Roles"][emp["Role"]]["Shift Count"] += 1
+
+                newd8 = emp["Date"].split("/")
+                newd8 = datetime.date(int(newd8[2]), int(newd8[0]), int(newd8[1]))
+                oldd8 = self.ppl[emp["uid"]]["Roles"][emp["Role"]]["First Shift"].split("/")
+                oldd8 = datetime.date(int(oldd8[2]), int(oldd8[0]), int(oldd8[1]))
+                if oldd8 > newd8:
+                    self.ppl[emp["uid"]]["Roles"][emp["Role"]]["First Shift"] = emp["Date"]
+
+                # if that day of the week is recorded already
+                if emp["DOW"] in self.ppl[emp["uid"]]["Roles"][emp["Role"]]["Days"]:
+                    self.ppl[emp["uid"]]["Roles"][emp["Role"]]["Days"][emp["DOW"]] += 1
+
+                #if that day hasnt been recorded yet then initialize it yo
+                else:
+                    self.ppl[emp["uid"]]["Roles"][emp["Role"]]["Days"][emp["DOW"]] = 1
+
+                # if that in time is recorded already there
+                if emp["In Time"] in self.ppl[emp["uid"]]["Roles"][emp["Role"]]["In Times"]:
+                    self.ppl[emp["uid"]]["Roles"][emp["Role"]]["In Times"][emp["In Time"]] += 1
+
+                #if that in time hasnt been recorded yet then initialize it yo
+                else:
+                    self.ppl[emp["uid"]]["Roles"][emp["Role"]]["In Times"][emp["In Time"]] = 1
+
+            # if the role hasnt been saved yet then create one...
+            else:
+                self.ppl[emp["uid"]]["Roles"][emp["Role"]] = {
+                    "First Shift": emp["Date"],
+                    "Shift Count": 1,
+                    "Days": {
+                        emp["DOW"]: 1
+                    },
+                    "In Times": {
+                        emp["In Time"]: 1
+                    }
+                }
+
+        # if the user doesnt exist in the database yet then...
+        else:
+            user = {
+                "Name": emp["Name"],
+                "uid": emp["uid"],
+                "First Shift": emp["Date"],
+                "Shift Count": 1,
+                "Roles": {
+                    emp["Role"]: {
+                        "First Shift": emp["Date"],
+                        "Shift Count": 1,
+                        "Days": {
+                            emp["DOW"]: 1
+                        },
+                        "In Times": {
+                            emp["In Time"]: 1
+                        }
+                    }
+                }
             }
-        }
+            self.ppl[emp["uid"]] = user
+
+        #self.save_all()
+
+
+
 Analyze()

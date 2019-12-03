@@ -79,9 +79,12 @@ def tiem(month, day, year):
 
 
 #tiem(11, 16, 2015)
+gay = 1
 
-print(datetime.date(2002, 12, 4).weekday())
+gay += 1
 
+# print(datetime.date(2002, 12, 4).weekday())
+print(gay)
 
 
 # day = int((2013 * 365.25) % 7)

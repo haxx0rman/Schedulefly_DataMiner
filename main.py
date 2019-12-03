@@ -23,7 +23,7 @@ class Scheduledaddy():
         pass
 
     def loop(self):
-        day = {"month": 8, "day": 9, "year": 2016}
+        day = {"month": 9, "day": 9, "year": 2017}
         leap = True if day["year"] % 4 == 0 else False
         months = { 1: "jan",
                    2: "feb",
@@ -54,7 +54,7 @@ class Scheduledaddy():
             "dec": 31
         }
         while True:
-            time.sleep(5)
+            #time.sleep(5)
             print(day)
             if day["day"] < dom[months[day["month"]]]:
                 day["day"] = day["day"] + 1
