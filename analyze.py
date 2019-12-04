@@ -14,9 +14,11 @@ class Analyze():
     def __init__(self):
         self.open_databases()
         self.days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        self.d8s = []
         self.start()
 
     def start(self):
+        self.personal_history()
         self.role_stats("Runner")
         #self.personal_history()
         pass
@@ -41,8 +43,64 @@ class Analyze():
             self.roles[p["Role"]] = [ p["uid"] ]
         pass
 
+    def daays(self):
+        day = {"month": 11, "day": 16, "year": 2015}
+        leap = True if day["year"] % 4 == 0 else False
+        months = { 1: "jan",
+                   2: "feb",
+                   3: "mar",
+                   4: "apr",
+                   5: "may",
+                   6: "jun",
+                   7: "jul",
+                   8: "aug",
+                   9: "sep",
+                   10: "oct",
+                   11: "nov",
+                   12: "dec"
+                  }
+
+        dom = {
+            "jan": 31,
+            "feb": 29 if leap else 28,
+            "mar": 31,
+            "apr": 30,
+            "may": 31,
+            "jun": 30,
+            "jul": 31,
+            "aug": 31,
+            "sep": 30,
+            "oct": 31,
+            "nov": 30,
+            "dec": 31
+        }
+
+        while True:
+            #time.sleep(5)
+            print(day)
+            if day["day"] < dom[months[day["month"]]]:
+                day["day"] = day["day"] + 1
+
+            elif day["day"] == dom[months[day["month"]]]:
+
+                if day["month"] < 12:
+                    day["day"] = 1
+                    day["month"] = day["month"] + 1
+                elif day["month"] == 12:
+                    day["month"] = 1
+                    day["day"] = 1
+                    day["year"] = day["year"] + 1
+
+            if day["year"] > 2020:
+                return self.d8s
+                break
+            self.d8s.append("{}/{}/{}".format(day["month"], day["day"], day["year"]))
+
     def personal_history(self):
-        for day in self.data.keys():
+        days = self.daays()
+        for day in days:
+            if day not in self.data.keys():
+                continue
             for emp in self.data[day]["day"]:
                 uid = emp["Profile"].split("=")[1]
                 self.alias[emp["Name"]] = uid
@@ -54,9 +112,11 @@ class Analyze():
                         "Name": emp["Name"],
                         "uid": uid,
                         "Role": emp["Role"],
-                        "In Time": emp["In Time"]
+                        "In Time": emp["In Time"],
+                        "Details": emp["Details"]
                 }
-
+                self.track_stats(dict)
+                self.track_roles(dict)
                 if uid in self.phistory.keys():
                     self.phistory[uid].append(dict)
                 else:
@@ -73,7 +133,8 @@ class Analyze():
                         "Name": emp["Name"],
                         "uid": uid,
                         "Role": emp["Role"],
-                        "In Time": emp["In Time"]
+                        "In Time": emp["In Time"],
+                        "Details": emp["Details"]
                 }
                 self.track_stats(dict)
                 self.track_roles(dict)
@@ -137,6 +198,14 @@ class Analyze():
                 else:
                     self.ppl[emp["uid"]]["Roles"][emp["Role"]]["In Times"][emp["In Time"]] = 1
 
+                # if that detail is recorded already there
+                if emp["Details"] in self.ppl[emp["uid"]]["Roles"][emp["Role"]]["Details"]:
+                    self.ppl[emp["uid"]]["Roles"][emp["Role"]]["Details"][emp["Details"]] += 1
+
+                #if that detail hasnt been recorded yet then initialize it yo
+                else:
+                    self.ppl[emp["uid"]]["Roles"][emp["Role"]]["Details"][emp["Details"]] = 1
+
             # if the role hasnt been saved yet then create one...
             else:
                 self.ppl[emp["uid"]]["Roles"][emp["Role"]] = {
@@ -147,6 +216,9 @@ class Analyze():
                     },
                     "In Times": {
                         emp["In Time"]: 1
+                    },
+                    "Details": {
+                        emp["Details"]: 1
                     }
                 }
 
@@ -166,6 +238,9 @@ class Analyze():
                         },
                         "In Times": {
                             emp["In Time"]: 1
+                        },
+                        "Details": {
+                            emp["Details"]: 1
                         }
                     }
                 }
