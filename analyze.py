@@ -1,4 +1,6 @@
 import json, datetime
+import matplotlib.pyplot as plt
+import numpy as np
 # find every employee in the schedule database
 
 # find every alias of theirs and save it in the alias data file using the profile number
@@ -19,8 +21,61 @@ class Analyze():
 
     def start(self):
         self.personal_history()
-        self.role_stats("Runner")
+        self.daays()
+        #self.role_stats("Runner")
+
+        self.plot_shifts_per_week("michael askew")
+
         #self.personal_history()
+        pass
+
+    def get_monday(self, date):
+        d8 = date.split("/")
+        t = datetime.date(int(d8[2]), int(d8[0]), int(d8[1]))
+        #today = today + datetime.timedelta(days=-today.weekday(), weeks=1)
+        monday = t - datetime.timedelta(days=t.weekday())
+        monday = str(monday).split("-")
+        monday = "{}/{}/{}".format(monday[1], monday[2], monday[0])
+
+        return monday
+
+    def plot_shifts_per_week(self, employee):
+        name = self.find(employee, self.alias.keys())
+        uid = self.alias[name]
+        first = self.get_monday(self.ppl[uid]["First Shift"])
+        b = False
+        mondays = []
+        weekly_shifts = {}
+        print(first)
+
+        last = self.get_monday(self.phistory[uid][-1]["Date"])
+        for w in self.weeks:
+            if first in  w:
+                b = True
+                print("B is true")
+            if b:
+                mondays.append(w)
+                weekly_shifts[w] = 0
+                if last in w:
+                    print("B  is False")
+                    break
+        print(json.dumps(weekly_shifts, indent=4))
+        for shift in self.phistory[uid]:
+            monday = self.get_monday(shift["Date"])
+            weekly_shifts[monday] += 1
+
+        y = []
+        x = mondays
+        for m in mondays:
+            y.append(weekly_shifts[m])
+
+        plt.plot(x, y)
+        plt.xlabel("Weeks")
+        plt.ylabel("Shifts")
+
+        plt.title(name)
+        plt.show()
+
         pass
 
     def role_stats(self, role):
@@ -41,6 +96,9 @@ class Analyze():
                 self.roles[p["Role"]].append(p["uid"])
         else:
             self.roles[p["Role"]] = [ p["uid"] ]
+        pass
+
+    def what_week(self):
         pass
 
     def daays(self):
@@ -74,10 +132,20 @@ class Analyze():
             "nov": 30,
             "dec": 31
         }
-
+        self.weeks = []
         while True:
             #time.sleep(5)
-            print(day)
+            #print(day)
+            t = datetime.date(day["year"], day["month"], day["day"])
+            #today = today + datetime.timedelta(days=-today.weekday(), weeks=1)
+            monday = t - datetime.timedelta(days=t.weekday())
+            monday = str(monday).split("-")
+            monday = "{}/{}/{}".format(monday[1], monday[2], monday[0])
+            if len(self.weeks) < 1 or monday not in self.weeks[-1]:
+                self.weeks.append(monday)
+            #self.weeks["{}/{}/{}".format(day["month"], day["day"], day["year"])] = monday
+            datetime.date(day["year"], day["month"], day["day"]).weekday()
+
             if day["day"] < dom[months[day["month"]]]:
                 day["day"] = day["day"] + 1
 
@@ -97,6 +165,7 @@ class Analyze():
             self.d8s.append("{}/{}/{}".format(day["month"], day["day"], day["year"]))
 
     def personal_history(self):
+        print("Running Full History Analysis...")
         days = self.daays()
         for day in days:
             if day not in self.data.keys():
@@ -248,6 +317,63 @@ class Analyze():
             self.ppl[emp["uid"]] = user
 
         #self.save_all()
+    def find(self, input, data):
+        high = 99
+        best_guess = ""
+        for item in data:
+            #print(item)
+            dist = self.levenshtein_ratio_and_distance(input, item)
+            if dist < high:
+                best_guess = item
+                high = dist
+                #print("Best Guess: " + best_guess)
+                #print("Distance: " + str(dist))
+        return best_guess
+    def levenshtein_ratio_and_distance(self, s, t, ratio_calc = False):
+        """ levenshtein_ratio_and_distance:
+            Calculates levenshtein distance between two strings.
+            If ratio_calc = True, the function computes the
+            levenshtein distance ratio of similarity between two strings
+            For all i and j, distance[i,j] will contain the Levenshtein
+            distance between the first i characters of s and the
+            first j characters of t
+        """
+        # Initialize matrix of zeros
+        rows = len(s)+1
+        cols = len(t)+1
+        distance = np.zeros((rows,cols),dtype = int)
+
+        # Populate matrix of zeros with the indeces of each character of both strings
+        for i in range(1, rows):
+            for k in range(1,cols):
+                distance[i][0] = i
+                distance[0][k] = k
+
+        # Iterate over the matrix to compute the cost of deletions,insertions and/or substitutions
+        for col in range(1, cols):
+            for row in range(1, rows):
+                if s[row-1] == t[col-1]:
+                    cost = 0 # If the characters are the same in the two strings in a given position [i,j] then the cost is 0
+                else:
+                    # In order to align the results with those of the Python Levenshtein package, if we choose to calculate the ratio
+                    # the cost of a substitution is 2. If we calculate just distance, then the cost of a substitution is 1.
+                    if ratio_calc == True:
+                        cost = 2
+                    else:
+                        cost = 1
+                distance[row][col] = min(distance[row-1][col] + 1,      # Cost of deletions
+                                     distance[row][col-1] + 1,          # Cost of insertions
+                                     distance[row-1][col-1] + cost)     # Cost of substitutions
+        if ratio_calc == True:
+            # Computation of the Levenshtein Distance Ratio
+            Ratio = ((len(s)+len(t)) - distance[row][col]) / (len(s)+len(t))
+            return Ratio
+        else:
+            # print(distance) # Uncomment if you want to see the matrix showing how the algorithm computes the cost of deletions,
+            # insertions and/or substitutions
+            # This is the minimum number of edits needed to convert string a to string b
+            return int(distance[row][col])
+
     def open_databases(self):
         with open('data.json') as f:
             self.data = json.load(f)
@@ -257,6 +383,7 @@ class Analyze():
                 self.phistory = json.load(f)
         except json.decoder.JSONDecodeError:
             self.phistory = {}
+        self.phistory = {}  # # DEBUG: this will prevent building on top of old data an counting shifts twice etc
 
         try:
             with open('roles.json') as f:
@@ -269,6 +396,7 @@ class Analyze():
                 self.ppl = json.load(f)
         except json.decoder.JSONDecodeError:
             self.ppl = {}
+        self.ppl = {} # # DEBUG: this will prevent building on top of old data an counting shifts twice etc
 
         try:
             with open('alias.json') as f:
@@ -281,7 +409,7 @@ class Analyze():
         #      json.dump(self.data, outfile, indent=4, sort_keys=True)
 
         with open('ppl_history.json', 'w') as outfile:
-             json.dump(self.phistory, outfile, indent=4, sort_keys=True)
+              json.dump(self.phistory, outfile, indent=4, sort_keys=True)
 
         with open('roles.json', 'w') as outfile:
              json.dump(self.roles, outfile, indent=4, sort_keys=True)

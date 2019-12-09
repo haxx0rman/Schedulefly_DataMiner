@@ -75,19 +75,24 @@ def tiem(month, day, year):
             break
 
 
-
-
-
-#tiem(11, 16, 2015)
-gay = 1
-
-gay += 1
-
-# print(datetime.date(2002, 12, 4).weekday())
-print(gay)
-
+#
+#
+#
+# #tiem(11, 16, 2015)
+# gay = 1
+#
+# gay += 1
+#
+# # print(datetime.date(2002, 12, 4).weekday())
+# print(gay)
+#
 
 # day = int((2013 * 365.25) % 7)
 # dow = ["saturday", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday"]
 # print(dow[day])
 # print(day)
+import datetime
+today = datetime.date.today()
+#today = today + datetime.timedelta(days=-today.weekday(), weeks=1)
+today = today - datetime.timedelta(days=today.weekday())
+print(today)
