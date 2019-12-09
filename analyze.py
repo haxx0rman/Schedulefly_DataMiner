@@ -20,11 +20,12 @@ class Analyze():
         self.start()
 
     def start(self):
-        self.personal_history()
+        #self.personal_history()
         self.daays()
+        self.plot_role("Runner")
         #self.role_stats("Runner")
 
-        self.plot_shifts_per_week("michael askew")
+        #self.plot_shifts_per_week()
 
         #self.personal_history()
         pass
@@ -39,7 +40,53 @@ class Analyze():
 
         return monday
 
-    def plot_shifts_per_week(self, employee):
+    def plot_role(self, role = None):
+        if role is None:
+            # get role input
+            pass
+        role = self.find(role, self.roles.keys())
+        shifts = {}
+        for e in self.roles[role]:
+            if self.ppl[e]["Roles"][role]["Shift Count"] < 5:
+                continue
+            shifts[e] = { "Name": self.ppl[e]["Name"],
+                           "Shifts Per Week": self.get_weekly_shifts(e, role) }
+
+            
+        #print(json.dumps(shifts, indent=4))
+    def get_weekly_shifts(self, uid, role):
+        # if employee is None:
+        #     employee = input("Type in an employee: ")
+        # name = self.find(employee, self.alias.keys())
+        # uid = self.alias[name]
+        first = self.get_monday(self.ppl[uid]["First Shift"])
+        b = False
+        mondays = []
+        weekly_shifts = {}
+        print(first)
+
+        last = self.get_monday(self.phistory[uid][-1]["Date"])
+        for w in self.weeks:
+            if first in  w:
+                b = True
+                #print("B is true")
+            if b:
+                mondays.append(w)
+                weekly_shifts[w] = 0
+                if last in w:
+                    #print("B  is False")
+                    break
+        #print(json.dumps(weekly_shifts, indent=4))
+        for shift in self.phistory[uid]:
+            if role in shift["Role"]:
+                monday = self.get_monday(shift["Date"])
+                weekly_shifts[monday] += 1
+        #print(json.dumps(weekly_shifts, indent=4))
+        return weekly_shifts
+
+    def plot_shifts_per_week(self, employee = None):
+        if employee is None:
+            employee = input("Type in an employee: ")
         name = self.find(employee, self.alias.keys())
         uid = self.alias[name]
         first = self.get_monday(self.ppl[uid]["First Shift"])
@@ -59,11 +106,11 @@ class Analyze():
                 if last in w:
                     print("B  is False")
                     break
-        print(json.dumps(weekly_shifts, indent=4))
+        #print(json.dumps(weekly_shifts, indent=4))
         for shift in self.phistory[uid]:
             monday = self.get_monday(shift["Date"])
             weekly_shifts[monday] += 1
-
+        print(json.dumps(weekly_shifts, indent=4))
         y = []
         x = mondays
         for m in mondays:
@@ -383,7 +430,7 @@ class Analyze():
                 self.phistory = json.load(f)
         except json.decoder.JSONDecodeError:
             self.phistory = {}
-        self.phistory = {}  # # DEBUG: this will prevent building on top of old data an counting shifts twice etc
+        #self.phistory = {}  # # DEBUG: this will prevent building on top of old data an counting shifts twice etc
 
         try:
             with open('roles.json') as f:
@@ -396,7 +443,7 @@ class Analyze():
                 self.ppl = json.load(f)
         except json.decoder.JSONDecodeError:
             self.ppl = {}
-        self.ppl = {} # # DEBUG: this will prevent building on top of old data an counting shifts twice etc
+        #self.ppl = {} # # DEBUG: this will prevent building on top of old data an counting shifts twice etc
 
         try:
             with open('alias.json') as f:
