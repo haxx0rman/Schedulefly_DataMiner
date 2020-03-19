@@ -22,8 +22,8 @@ class Analyze():
     def start(self):
         #self.personal_history()
         self.daays()
-        self.plot_role("Runner")
-        #self.role_stats("Runner")
+        #self.plot_role("Runner")
+        self.role_stats("Runner")
 
         #self.plot_shifts_per_week()
 
@@ -52,7 +52,7 @@ class Analyze():
             shifts[e] = { "Name": self.ppl[e]["Name"],
                            "Shifts Per Week": self.get_weekly_shifts(e, role) }
 
-            
+
         #print(json.dumps(shifts, indent=4))
     def get_weekly_shifts(self, uid, role):
         # if employee is None:

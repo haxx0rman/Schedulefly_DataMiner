@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 class Scheduledaddy():
     def __init__(self):
-        self.url = "https://m.schedulefly.com/(S(1oy5wwqntes4qsmvlvzymbmq))"
+        self.url = "https://m.schedulefly.com/(S(dx4xfy0zrmjcdno4gazozvkf))"
         with open('data.json') as f:
             self.data = json.load(f)
         self.headers = {
@@ -23,7 +23,7 @@ class Scheduledaddy():
         pass
 
     def loop(self):
-        day = {"month": 9, "day": 9, "year": 2017}
+        day = {"month": 1, "day": 9, "year": 2020}
         leap = True if day["year"] % 4 == 0 else False
         months = { 1: "jan",
                    2: "feb",
@@ -72,6 +72,7 @@ class Scheduledaddy():
             if day["year"] > 2020:
                 break
             self.crib("{}/{}/{}".format(day["month"], day["day"], day["year"]))
+            self.save()
 
 
 
