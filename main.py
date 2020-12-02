@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 class Scheduledaddy():
     def __init__(self):
-        self.url = "https://m.schedulefly.com/(S(dx4xfy0zrmjcdno4gazozvkf))"
+        self.url = "https://m.schedulefly.com/(S(gwb1zxsyecbjm1dh2xgqmg0z))"
         with open('data.json') as f:
             self.data = json.load(f)
         self.headers = {
@@ -70,6 +70,10 @@ class Scheduledaddy():
                     day["year"] = day["year"] + 1
 
             if day["year"] > 2020:
+                self.save()
+                break
+            if day["month"] > 7:
+                self.save()
                 break
             self.crib("{}/{}/{}".format(day["month"], day["day"], day["year"]))
             self.save()
@@ -93,7 +97,7 @@ class Scheduledaddy():
             if el.name == "b":
                 role = el.text.split(" (")[0]
             if el.name == "div":
-                print(el)
+                # print(el)
                 if el.get('id') == 'person':
                     if shift == "Day":
                         time = el.find("span").text.split(" ")[0]

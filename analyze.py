@@ -1,5 +1,5 @@
 import json, datetime
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 # find every employee in the schedule database
 
@@ -21,7 +21,7 @@ class Analyze():
 
     def start(self):
         #self.personal_history()
-        self.daays()
+        #self.daays()
         #self.plot_role("Runner")
         self.role_stats("Runner")
 
@@ -134,6 +134,8 @@ class Analyze():
         print("{} People have had at least 1 {} shift...".format(str(len(self.roles[role])), role))
         for p in self.roles[role]:
             #print(self.ppl[p][])
+            # if self.ppl[p]["Roles"][role]["Shift Count"] < 100:
+            #     continue
             dank = "{} has worked {} {} shifts.".format(self.ppl[p]["Name"], self.ppl[p]["Roles"][role]["Shift Count"], role)
             print(dank)
 
